@@ -90,7 +90,7 @@ function syncInputs() {
   model.features.forEach((f, j) => {
     for (const inp of $$(`input[data-j="${j}"]`)) {
       if (f.kind === "binary") inp.checked = !!state.x[j];
-      else inp.value = state.x[j];
+      else inp.value = f.step < 1 ? +(+state.x[j]).toFixed(2) : state.x[j];
     }
     markChanged(j);
   });

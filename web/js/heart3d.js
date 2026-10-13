@@ -349,10 +349,6 @@ export class HeartScene {
         this.body.add(rib);
       }
     }
-    const sternum = new THREE.Mesh(new THREE.BoxGeometry(0.3, 3.4, 0.08), bone);
-    sternum.position.set(0, 1.45, 1.86);
-    sternum.rotation.x = 0.12;
-    this.body.add(sternum);
     for (let i = 0; i < 17; i++) {
       const vert = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.22, 0.32, 16), bone);
       vert.position.set(0, 4.2 - i * 0.6, -1.45 + Math.sin(i / 5) * 0.12);
@@ -432,11 +428,11 @@ export class HeartScene {
   setView(name, animate = true) {
     const c = this.heartPivot.getWorldPosition(new THREE.Vector3());
     const views = {
-      anterior: [0, 0.4, 7.2], lao: [4.6, 0.9, 5.4], lateral: [7.2, 0.4, -0.4],
-      posterior: [0, 0.4, -7.2], inferior: [0.4, -6.8, 2.0], body: [0, 1.2, 17],
+      anterior: [0, 0.6, 8.6], lao: [5.6, 1.0, 6.4], lateral: [8.6, 0.6, -0.4],
+      posterior: [0, 0.6, -8.6], inferior: [0.4, -8.0, 2.4], body: [0, 1.2, 17],
     };
     const off = new THREE.Vector3(...views[name]);
-    const target = name === "body" ? new THREE.Vector3(0, -0.4, 0) : c;
+    const target = name === "body" ? new THREE.Vector3(0, -0.4, 0) : c.clone().add(new THREE.Vector3(0, 0.35, 0));
     const to = target.clone().add(off);
     if (!animate) {
       this.camera.position.copy(to);
