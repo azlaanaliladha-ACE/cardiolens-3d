@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CardioLens 3D</title>
+  <meta name="description" content="Interactive 3D coronary artery disease and vessel-level stenosis risk explorer with exact SHAP explanations. Educational decision-support prototype." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 28S3 20 3 11a6.5 6.5 0 0 1 13-1 6.5 6.5 0 0 1 13 1c0 9-13 17-13 17z' fill='%23e66767'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="css/style.css" />
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div class="disclaimer" role="note">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 21h20L12 3zm0 6v6m0 3v.01" /></svg>
+    <span><strong>Educational decision-support prototype — not a diagnostic device.</strong>
+      Predictions come from a model trained on 303 patients and are not a substitute for coronary angiography,
+      CT angiography or any formal diagnostic imaging or clinical judgement.</span>
+  </div>
+
+  <header class="topbar">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 28S3 20 3 11a6.5 6.5 0 0 1 13-1 6.5 6.5 0 0 1 13 1c0 9-13 17-13 17z"/><path class="ecg" d="M5 15h6l2-4 3 9 2-6h9"/></svg>
+      <div>
+        <h1>CardioLens 3D</h1>
+        <p>Coronary risk, mapped onto the heart</p>
+      </div>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button role="tab" class="tab active" data-view="explorer" aria-selected="true">Explorer</button>
+      <button role="tab" class="tab" data-view="modelcard" aria-selected="false">Model card</button>
+      <button role="tab" class="tab" data-view="about" aria-selected="false">How it works</button>
+    </nav>
+  </header>
+
+  <main id="view-explorer" class="explorer">
+    <!-- ============ LEFT: patient inputs ============ -->
+    <aside class="panel inputs" aria-label="Patient data">
+      <div class="panel-head">
+        <h2>Patient</h2>
+        <div class="preset-row">
+          <select id="preset" aria-label="Load a patient"></select>
+          <button id="randomBtn" class="ghost" title="Random cohort patient">Random</button>
+        </div>
+        <div id="patientBadge" class="patient-badge"></div>
+        <input id="search" type="search" placeholder="Filter features…" aria-label="Filter features" />
+      </div>
+      <div id="featureGroups" class="feature-groups"></div>
+    </aside>
+
+    <!-- ============ CENTER: 3D ============ -->
+    <section class="stage" aria-label="3D heart view">
+      <div id="canvasHost" class="canvas-host"></div>
+      <div class="stage-top">
+        <div class="seg" role="group" aria-label="Camera view">
+          <button data-cam="anterior" class="active">Anterior</button>
+          <button data-cam="lao">LAO</button>
+          <button data-cam="lateral">Left lat.</button>
+          <button data-cam="posterior">Posterior</button>
+          <button data-cam="inferior">Inferior</button>
+          <button data-cam="body">Body</button>
+        </div>
+      </div>
+      <div class="stage-bottom">
+        <div class="toggles">
+          <label><input type="checkbox" id="tgTerritory" checked /> Perfusion territories</label>
+          <label><input type="checkbox" id="tgBody" checked /> Torso &amp; ribs</label>
+          <label><input type="checkbox" id="tgFlow" checked /> Flow</label>
+          <label><input type="checkbox" id="tgBeat" checked /> Heartbeat</label>
+          <label><input type="checkbox" id="tgSpin" /> Auto-rotate</label>
+        </div>
+        <div class="legend" aria-label="Stenosis probability colour scale">
+          <span>Stenosis probability</span>
+          <div class="ramp"></div>
+          <div class="ramp-ticks"><span>0%</span><span>50%</span><span>100%</span></div>
+        </div>
+      </div>
+      <div id="vesselCard" class="vessel-card hidden" aria-live="polite"></div>
+      <div id="hoverTip" class="hover-tip hidden"></div>
+      <div id="loading" class="loading">Building 3D heart…</div>
+    </section>
+
+    <!-- ============ RIGHT: results ============ -->
+    <aside class="panel results" aria-label="Prediction and explanation">
+      <section class="risk-summary">
+        <div class="cad-hero">
+          <div class="cad-label">Overall CAD probability</div>
+          <div class="cad-value" id="cadValue">–</div>
+          <div class="cad-status" id="cadStatus"></div>
+          <div class="cad-delta" id="cadDelta"></div>
+        </div>
+        <div class="vessel-bars" id="vesselBars"></div>
+      </section>
+
+      <section class="explain">
+        <div class="explain-head">
+          <h2>Why this prediction?</h2>
+          <div class="seg small" id="targetSeg" role="group" aria-label="Explained target">
+            <button data-t="CAD" class="active">CAD</button>
+            <button data-t="LAD">LAD</button>
+            <button data-t="LCX">LCX</button>
+            <button data-t="RCA">RCA</button>
+          </div>
+        </div>
+        <p class="hint" id="waterfallCaption"></p>
+        <div id="waterfall" class="chart"></div>
+        <div class="additivity" id="additivity"></div>
+      </section>
+
+      <section class="physio">
+        <div class="explain-head">
+          <h2>Physiological breakdown</h2>
+          <label class="mini"><input type="checkbox" id="onlyAbnormal" /> Out of range only</label>
+        </div>
+        <div id="physioTable" class="physio-table"></div>
+      </section>
+    </aside>
+  </main>
+
+  <main id="view-modelcard" class="doc hidden">
+    <div class="doc-inner">
+      <div class="doc-head">
+        <h2>Model card</h2>
+        <div class="seg" id="mcSeg" role="group" aria-label="Target">
+          <button data-t="CAD" class="active">CAD</button>
+          <button data-t="LAD">LAD</button>
+          <button data-t="LCX">LCX</button>
+          <button data-t="RCA">RCA</button>
+        </div>
+      </div>
+      <p class="lede" id="mcLede"></p>
+      <div class="stat-row" id="mcStats"></div>
+      <div class="grid2">
+        <figure class="card"><figcaption>ROC curve · out-of-fold</figcaption><div id="rocChart" class="chart"></div></figure>
+        <figure class="card"><figcaption>Calibration · out-of-fold</figcaption><div id="calChart" class="chart"></div></figure>
+      </div>
+      <figure class="card"><figcaption>Model comparison · repeated stratified 5-fold CV (5×5 = 25 folds), mean ± SD</figcaption><div id="benchTable" class="table-wrap"></div></figure>
+      <figure class="card"><figcaption>Global feature importance · mean |SHAP| (log-odds) over the 303-patient cohort</figcaption><div id="globalImp" class="chart"></div></figure>
+      <figure class="card"><figcaption>Explanation fidelity</figcaption><div id="fidelity"></div></figure>
+    </div>
+  </main>
+
+  <main id="view-about" class="doc hidden">
+    <div class="doc-inner prose" id="aboutContent"></div>
+  </main>
+
+  <div id="tooltip" class="tooltip hidden" role="tooltip"></div>
+
+  <dialog id="consent">
+    <h2>Before you start</h2>
+    <p>CardioLens 3D is an <strong>educational, decision-support prototype</strong> built for the Multimodal AI Hackathon 2026.</p>
+    <ul>
+      <li>It estimates the probability of coronary artery disease and of ≥50% stenosis in the LAD, LCX and RCA from routine clinical, ECG, lab and echo data.</li>
+      <li>It was trained on a single public cohort of 303 patients. Its accuracy is limited, especially for LCX and RCA (see the Model card).</li>
+      <li>The 3D heart is a schematic. Colours show vessel-level probabilities, <em>not</em> the location of a lesion.</li>
+      <li>It must not be used to diagnose, treat or rule out disease.</li>
+    </ul>
+    <form method="dialog"><button class="primary" value="ok">I understand</button></form>
+  </dialog>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
