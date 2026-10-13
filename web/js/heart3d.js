@@ -149,7 +149,7 @@ export class HeartScene {
     this.scene.add(this.root);
     this.heartPivot = new THREE.Group();    // anatomical orientation of the heart
     this.heartPivot.position.set(0.35, 0.2, 0.55);
-    this.heartPivot.rotation.set(0.38, -0.5, 0.72, "YXZ");
+    this.heartPivot.rotation.set(0.22, -0.32, 0.42, "YXZ");
     this.root.add(this.heartPivot);
     this.heart = new THREE.Group();         // beating group
     this.heartPivot.add(this.heart);
@@ -233,7 +233,7 @@ export class HeartScene {
       return m;
     };
     const art = 0x8a7470, ven = 0x6b6f80;
-    tube([[-0.05, 0.75, 0.08], [-0.12, 1.3, 0.12], [-0.08, 1.85, 0.02], [0.3, 2.12, -0.3], [0.58, 1.9, -0.58], [0.62, 1.2, -0.66], [0.6, 0.0, -0.66], [0.58, -1.6, -0.6]], 0.17, art); // aorta
+    tube([[-0.05, 0.75, 0.08], [-0.12, 1.3, 0.12], [-0.08, 1.85, 0.02], [0.3, 2.12, -0.3], [0.58, 1.9, -0.58], [0.62, 1.2, -0.7], [0.6, 0.3, -0.75]], 0.17, art); // aorta (descending part hidden behind)
     tube([[-0.02, 1.95, -0.02], [-0.12, 2.5, -0.02]], 0.055, art);
     tube([[0.16, 2.08, -0.18], [0.16, 2.58, -0.18]], 0.05, art);
     tube([[0.36, 2.08, -0.36], [0.44, 2.55, -0.36]], 0.05, art);
@@ -333,7 +333,7 @@ export class HeartScene {
     torso.renderOrder = 2;
     this.body.add(torso);
 
-    const bone = new THREE.MeshStandardMaterial({ color: 0xd9d2c3, roughness: 0.8, transparent: true, opacity: 0.28, depthWrite: false });
+    const bone = new THREE.MeshStandardMaterial({ color: 0xd9d2c3, roughness: 0.8, transparent: true, opacity: 0.16, depthWrite: false });
     for (let i = 0; i < 10; i++) {
       const yBack = 3.2 - i * 0.62, drop = 0.55 + i * 0.05;
       const rx = 2.35 + Math.sin((i / 9) * Math.PI) * 0.45, rz = 1.62 + Math.sin((i / 9) * Math.PI) * 0.22;
@@ -349,7 +349,7 @@ export class HeartScene {
         this.body.add(rib);
       }
     }
-    const sternum = new THREE.Mesh(new THREE.BoxGeometry(0.42, 3.6, 0.14), bone);
+    const sternum = new THREE.Mesh(new THREE.BoxGeometry(0.3, 3.4, 0.08), bone);
     sternum.position.set(0, 1.45, 1.86);
     sternum.rotation.x = 0.12;
     this.body.add(sternum);

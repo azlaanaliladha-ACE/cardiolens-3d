@@ -12,8 +12,9 @@ export function waterfall(el, pred, features, x, k = 10) {
   const order = [...Array(n).keys()].sort((a, b) => Math.abs(pred.phi[b]) - Math.abs(pred.phi[a]));
   const top = order.slice(0, k);
   const rest = order.slice(k).reduce((s, j) => s + pred.phi[j], 0);
+  const short = (t) => (t.length > 26 ? t.slice(0, 25) + "…" : t);
   const rows = top.map((j) => ({
-    label: features[j].label,
+    label: features[j].label, short: short(features[j].label),
     value: features[j].kind === "binary" ? (x[j] ? "yes" : "no") : `${fmtV(x[j])}${features[j].unit ? " " + features[j].unit : ""}`,
     phi: pred.phi[j],
   }));
@@ -41,7 +42,7 @@ export function waterfall(el, pred, features, x, k = 10) {
     const tip = `${esc(st.label)}${st.value ? ` = ${esc(st.value)}` : ""}<br>${up ? "+" : "−"}${Math.abs(st.phi).toFixed(3)} log-odds (${up ? "raises" : "lowers"} risk)`;
     s += `<g class="mark" data-tip="${esc(tip)}">`;
     s += `<rect x="0" y="${y}" width="${W}" height="${rowH}" fill="transparent"/>`;
-    s += `<text x="${labelW - 8}" y="${y + 11}" class="row-label${st.other ? " muted" : ""}" text-anchor="end">${esc(st.label)}</text>`;
+    s += `<text x="${labelW - 8}" y="${y + 11}" class="row-label${st.other ? " muted" : ""}" text-anchor="end">${esc(st.short || st.label)}</text>`;
     if (st.value) s += `<text x="${labelW - 8}" y="${y + 21}" class="row-sub" text-anchor="end">${esc(st.value)}</text>`;
     s += `<rect x="${x0}" y="${y + 5}" width="${w}" height="${rowH - 10}" rx="3" fill="${st.other ? "var(--muted)" : up ? SHAP_UP : SHAP_DOWN}"/>`;
     const lx = up ? x1 + 4 : x0 - 4;
