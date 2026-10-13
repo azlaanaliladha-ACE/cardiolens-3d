@@ -1,15 +1,15 @@
 {
  "CAD": {
   "max_abs_diff_vs_xgboost_pred_contribs": 2.933916449787688e-07,
-  "max_additivity_error": 7.399388408657614e-07
+  "max_additivity_error": 7.399388417539399e-07
  },
  "LAD": {
   "max_abs_diff_vs_xgboost_pred_contribs": 1.6995894003279943e-07,
-  "max_additivity_error": 6.986370548744958e-07
+  "max_additivity_error": 6.986370547079623e-07
  },
  "LCX": {
   "max_abs_diff_vs_xgboost_pred_contribs": 1.7504852367622448e-07,
-  "max_additivity_error": 9.829354996604422e-07
+  "max_additivity_error": 9.82935499216353e-07
  },
  "RCA": {
   "max_abs_diff_vs_xgboost_pred_contribs": 1.5358621019423424e-07,

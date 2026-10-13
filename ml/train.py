@@ -194,6 +194,8 @@ def main():
                           "roc": [fpr[idx].round(4).tolist(), tpr[idx].round(4).tolist()],
                           "calibration": calib, "prevalence": float(y.mean())}
         out["cohort"][f"oof_{t}"] = oof.round(4).tolist()
+        # reference probabilities from Python, used by the web app's live parity check
+        out["cohort"][f"py_{t}"] = ens.predict_proba(Xv)[:, 1].round(8).tolist()
         out["targets"][t] = exp
 
         bench = {}
@@ -205,7 +207,7 @@ def main():
         out["benchmark"][t] = bench
         print(f"   CV AUC {cv['roc_auc'][0]:.3f}  F1 {cv['f1'][0]:.3f}")
 
-    out["cohort"]["X"] = Xv.round(3).tolist()
+    out["cohort"]["X"] = Xv.tolist()  # full precision: rounding can flip tree splits
     out["cohort"]["Y"] = Y.values.tolist()
     out["meta"] = {
         "dataset": "Extension of Z-Alizadeh Sani (UCI #411), 303 patients",

@@ -356,13 +356,18 @@ function renderModelCard() {
   }</tbody></table><p class="muted tiny">Bold = best in column. The ensemble is not the single best model for every vessel, but it is the most consistent across all four targets and its SHAP values are exact.</p>`;
 
   // live fidelity check: compute SHAP for every cohort patient in the browser
-  let maxErr = 0;
+  let maxErr = 0, maxPy = 0;
   const t0 = performance.now();
-  for (const x of model.cohort.X) maxErr = Math.max(maxErr, model.predictTarget(t, x).additivityError);
+  model.cohort.X.forEach((x, i) => {
+    const r = model.predictTarget(t, x);
+    maxErr = Math.max(maxErr, r.additivityError);
+    maxPy = Math.max(maxPy, Math.abs(r.p - model.cohort[`py_${t}`][i]));
+  });
   const ms = performance.now() - t0;
   $("#fidelity").innerHTML = `<ul class="checks">
     <li><b>Exact, not approximate.</b> TreeSHAP for the XGBoost member is computed exactly in your browser by subset enumeration (depth-2 trees use ≤3 features); the logistic member's SHAP is closed-form. Offline, the implementation matches XGBoost's native <code>pred_contribs</code> to <b>&lt; 3×10⁻⁷</b> on all targets.</li>
     <li><b>Additivity verified live:</b> across all 303 patients, |baseline + ΣSHAP − model log-odds| ≤ <b>${maxErr.toExponential(1)}</b> (computed just now in ${ms.toFixed(0)} ms).</li>
+    <li><b>Browser = Python:</b> the in-browser model reproduces the Python/XGBoost probabilities for all 303 patients to within <b>${maxPy.toExponential(1)}</b>.</li>
     <li><b>No target leakage:</b> LAD, LCX, RCA and Cath are excluded from every model's inputs.</li></ul>`;
 }
 
